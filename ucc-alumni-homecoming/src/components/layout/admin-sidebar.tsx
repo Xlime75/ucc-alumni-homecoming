@@ -2,6 +2,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import {
@@ -10,7 +11,6 @@ import {
   CreditCard,
   Settings,
   LogOut,
-  GraduationCap,
 } from "lucide-react";
 
 const navigation = [
@@ -43,9 +43,17 @@ export default function AdminSidebar() {
     <aside className="flex min-h-screen w-full flex-col bg-[#064B36] text-white md:w-64">
       <div className="border-b border-white/10 p-6">
         <div className="flex items-center gap-3">
-          <GraduationCap size={32} className="text-[#D6A84B]" />
+          <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-full bg-white">
+            <Image
+              src="/alumni-association-04.png"
+              alt="Unida Christian Colleges Alumni Association logo"
+              fill
+              sizes="48px"
+              className="object-cover object-top"
+            />
+          </div>
           <div>
-            <h2 className="font-bold">UCC Homecoming</h2>
+            <h2 className="font-bold">UCC Alumni Homecoming</h2>
             <p className="text-xs text-white/60">
               Admin Panel · 2027
             </p>

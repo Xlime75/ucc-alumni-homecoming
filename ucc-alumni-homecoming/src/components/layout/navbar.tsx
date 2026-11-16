@@ -1,21 +1,27 @@
 
 import Link from "next/link";
-import { GraduationCap } from "lucide-react";
+import Image from "next/image";
 
 export default function Navbar() {
   return (
     <header className="sticky top-0 z-50 border-b border-[#D6A84B]/30 bg-[#10264C] text-white">
       <nav className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
         <Link href="/" className="flex items-center gap-3">
-          <div className="rounded-xl bg-blue-900 p-2 text-white">
-            <GraduationCap size={24} />
+          <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-full bg-white">
+            <Image
+              src="/alumni-association-04.png"
+              alt="Unida Christian Colleges Alumni Association logo"
+              fill
+              sizes="48px"
+              className="object-cover object-top"
+            />
           </div>
 
           <div>
-            <p className="font-bold text-slate-900">
+            <p className="font-bold text-white">
               UCC Alumni Homecoming
             </p>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-white/70">
               Unida Christian Colleges
             </p>
           </div>
