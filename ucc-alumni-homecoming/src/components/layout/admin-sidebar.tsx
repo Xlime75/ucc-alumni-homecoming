@@ -8,6 +8,7 @@ import {
   LayoutDashboard,
   Users,
   CreditCard,
+  Settings,
   LogOut,
   GraduationCap,
 } from "lucide-react";
@@ -27,6 +28,11 @@ const navigation = [
     name: "Payments",
     href: "/admin/payments",
     icon: CreditCard,
+  },
+    {
+    name: "Settings",
+    href: "/admin/settings",
+    icon: Settings,
   },
 ];
 

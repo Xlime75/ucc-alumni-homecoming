@@ -1,4 +1,5 @@
 
+import { connection } from "next/server";
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 
@@ -8,6 +9,8 @@ import DashboardContent from "./dashboard-content";
 export const instant = false;
 
 export default async function AdminDashboardPage() {
+  await connection();
+
   const session = await getServerSession(authOptions);
 
   if (!session?.user?.email) {
