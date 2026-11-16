@@ -3,11 +3,24 @@ import mongoose, { Schema, Model } from "mongoose";
 
 export interface IRegistration {
   registrationNumber: string;
-  primaryRegistrant: { 
-    attendeeType: "alumni" | "former_teacher" | "former_staff";
+  primaryRegistrant: {
+    attendeeType: "alumni" | "former_teacher" | "former_staff" | "former_principal";
     fullName: string;
+    nickname: string;
+    batchYear: string;
+    schoolLevel:
+      | "college"
+      | "high_school"
+      | "junior_high_school"
+      | "senior_high_school"
+      | "elementary"
+      | "kinder";
+    birthday: Date;
+    currentAddress: string;
     email: string;
     contactNumber: string;
+    facebookProfile: string;
+    work: string;
   };
   totalAttendees: number;
   feePerPerson: number;
@@ -32,6 +45,37 @@ const RegistrationSchema = new Schema<IRegistration>(
         required: true,
         trim: true,
       },
+      nickname: {
+        type: String,
+        required: true,
+        trim: true,
+      },
+      batchYear: {
+        type: String,
+        required: true,
+        trim: true,
+      },
+      schoolLevel: {
+        type: String,
+        enum: [
+          "college",
+          "high_school",
+          "junior_high_school",
+          "senior_high_school",
+          "elementary",
+          "kinder",
+        ],
+        required: true,
+      },
+      birthday: {
+        type: Date,
+        required: true,
+      },
+      currentAddress: {
+        type: String,
+        required: true,
+        trim: true,
+      },
       email: {
         type: String,
         required: true,
@@ -43,9 +87,19 @@ const RegistrationSchema = new Schema<IRegistration>(
         required: true,
         trim: true,
       },
+      facebookProfile: {
+        type: String,
+        required: true,
+        trim: true,
+      },
+      work: {
+        type: String,
+        required: true,
+        trim: true,
+      },
       attendeeType: {
         type: String,
-        enum: ["alumni", "former_teacher", "former_staff"],
+        enum: ["alumni", "former_teacher", "former_staff", "former_principal"],
         required: true,
       },
     },
@@ -89,7 +143,19 @@ const RegistrationSchema = new Schema<IRegistration>(
   }
 );
 
+RegistrationSchema.index(
+  { "primaryRegistrant.email": 1 },
+  {
+    unique: true,
+    partialFilterExpression: {
+      registrationStatus: { 
+        $in: ["pending", "confirmed"] },
+    },
+  }
+);
+
 const Registration: Model<IRegistration> =
+
   mongoose.models.Registration ||
   mongoose.model<IRegistration>("Registration", RegistrationSchema);
 

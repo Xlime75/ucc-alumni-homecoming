@@ -12,14 +12,28 @@ import {
   ArrowLeft,
 } from "lucide-react";
 
+type AttendeeType =
+  | "alumni"
+  | "former_teacher"
+  | "former_staff"
+  | "former_principal"
+  | "companion";
+
 type Registration = {
   _id: string;
   registrationNumber: string;
   primaryRegistrant: {
     fullName: string;
+    nickname?: string;
+    batchYear?: string;
+    schoolLevel?: string;
+    birthday?: string;
+    currentAddress?: string;
     email: string;
     contactNumber: string;
-    attendeeType: string;
+    facebookProfile?: string;
+    work?: string;
+    attendeeType: AttendeeType;
   };
   totalAttendees: number;
   totalAmount: number;
@@ -33,7 +47,7 @@ type Attendee = {
   _id: string;
   fullName: string;
   email?: string;
-  attendeeType: string;
+  attendeeType: AttendeeType;
   isPrimaryRegistrant: boolean;
   attendanceStatus: string;
 };
@@ -195,7 +209,24 @@ export default function AdminRegistrationsPage() {
     });
   };
 
-  const formatLabel = (value: string) => {
+  const formatBirthday = (date?: string) => {
+    if (!date) return "—";
+
+    const parsedDate = new Date(date);
+
+    if (Number.isNaN(parsedDate.getTime())) return "—";
+
+    return parsedDate.toLocaleDateString("en-PH", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      timeZone: "UTC",
+    });
+  };
+
+  const formatLabel = (value?: string) => {
+    if (!value) return "—";
+
     return value
       .replaceAll("_", " ")
       .replace(/\b\w/g, (letter) => letter.toUpperCase());
@@ -225,6 +256,7 @@ export default function AdminRegistrationsPage() {
 
   if (selectedRegistration) {
     const { registration, attendees, payments } = selectedRegistration;
+    const primary = registration.primaryRegistrant;
 
     return (
       <div className="space-y-6">
@@ -242,7 +274,7 @@ export default function AdminRegistrationsPage() {
               Registration Details
             </p>
             <h1 className="mt-2 text-2xl font-bold text-gray-900">
-              {registration.primaryRegistrant.fullName}
+              {primary.fullName}
             </h1>
             <p className="mt-1 text-sm text-gray-500">
               {registration.registrationNumber}
@@ -275,14 +307,18 @@ export default function AdminRegistrationsPage() {
 
           <div className="rounded-xl border bg-white p-5">
             <p className="text-sm text-gray-500">Registration Status</p>
-            <span className={`mt-2 inline-block rounded-full px-3 py-1 text-xs font-medium ${statusStyle(registration.registrationStatus)}`}>
+            <span
+              className={`mt-2 inline-block rounded-full px-3 py-1 text-xs font-medium ${statusStyle(registration.registrationStatus)}`}
+            >
               {formatLabel(registration.registrationStatus)}
             </span>
           </div>
 
           <div className="rounded-xl border bg-white p-5">
             <p className="text-sm text-gray-500">Payment Status</p>
-            <span className={`mt-2 inline-block rounded-full px-3 py-1 text-xs font-medium ${statusStyle(registration.paymentStatus)}`}>
+            <span
+              className={`mt-2 inline-block rounded-full px-3 py-1 text-xs font-medium ${statusStyle(registration.paymentStatus)}`}
+            >
               {formatLabel(registration.paymentStatus)}
             </span>
           </div>
@@ -290,35 +326,87 @@ export default function AdminRegistrationsPage() {
 
         <section className="rounded-xl border bg-white p-5 shadow-sm">
           <h2 className="text-lg font-bold text-gray-900">
-            Primary Registrant
+            Primary Registrant Information
           </h2>
 
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             <div>
               <p className="text-xs text-gray-500">Full Name</p>
+              <p className="mt-1 font-medium">{primary.fullName || "—"}</p>
+            </div>
+
+            <div>
+              <p className="text-xs text-gray-500">Nickname</p>
+              <p className="mt-1 font-medium">{primary.nickname || "—"}</p>
+            </div>
+
+            <div>
+              <p className="text-xs text-gray-500">Batch / Year Graduated</p>
+              <p className="mt-1 font-medium">{primary.batchYear || "—"}</p>
+            </div>
+
+            <div>
+              <p className="text-xs text-gray-500">School Level Graduated</p>
               <p className="mt-1 font-medium">
-                {registration.primaryRegistrant.fullName}
+                {formatLabel(primary.schoolLevel)}
               </p>
             </div>
 
             <div>
-              <p className="text-xs text-gray-500">Email</p>
+              <p className="text-xs text-gray-500">Birthday</p>
               <p className="mt-1 font-medium">
-                {registration.primaryRegistrant.email}
+                {formatBirthday(primary.birthday)}
               </p>
             </div>
 
             <div>
               <p className="text-xs text-gray-500">Contact Number</p>
               <p className="mt-1 font-medium">
-                {registration.primaryRegistrant.contactNumber}
+                {primary.contactNumber || "—"}
               </p>
             </div>
 
             <div>
-              <p className="text-xs text-gray-500">Attendee Type</p>
+              <p className="text-xs text-gray-500">Email Address</p>
+              <p className="mt-1 break-all font-medium">
+                {primary.email || "—"}
+              </p>
+            </div>
+
+            <div>
+              <p className="text-xs text-gray-500">
+                Facebook Account / Profile
+              </p>
+              {primary.facebookProfile ? (
+                <a
+                  href={primary.facebookProfile}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-1 block break-all font-medium text-emerald-700 hover:underline"
+                >
+                  View Facebook Profile
+                </a>
+              ) : (
+                <p className="mt-1 font-medium">—</p>
+              )}
+            </div>
+
+            <div>
+              <p className="text-xs text-gray-500">Work / Occupation</p>
+              <p className="mt-1 font-medium">{primary.work || "—"}</p>
+            </div>
+
+            <div>
+              <p className="text-xs text-gray-500">Attendee Category</p>
               <p className="mt-1 font-medium">
-                {formatLabel(registration.primaryRegistrant.attendeeType)}
+                {formatLabel(primary.attendeeType)}
+              </p>
+            </div>
+
+            <div className="sm:col-span-2">
+              <p className="text-xs text-gray-500">Current Address</p>
+              <p className="mt-1 font-medium">
+                {primary.currentAddress || "—"}
               </p>
             </div>
 
@@ -421,7 +509,9 @@ export default function AdminRegistrationsPage() {
                         {formatCurrency(payment.amount)}
                       </td>
                       <td className="px-5 py-4">
-                        <span className={`rounded-full px-3 py-1 text-xs font-medium ${statusStyle(payment.paymentStatus)}`}>
+                        <span
+                          className={`rounded-full px-3 py-1 text-xs font-medium ${statusStyle(payment.paymentStatus)}`}
+                        >
                           {formatLabel(payment.paymentStatus)}
                         </span>
                       </td>
@@ -523,9 +613,7 @@ export default function AdminRegistrationsPage() {
           <Users size={24} />
         </div>
         <div>
-          <p className="text-sm text-gray-500">
-            Matching Registrations
-          </p>
+          <p className="text-sm text-gray-500">Matching Registrations</p>
           <p className="text-2xl font-bold text-gray-900">
             {registrations.length}
           </p>
@@ -569,13 +657,19 @@ export default function AdminRegistrationsPage() {
             <tbody className="divide-y divide-gray-100">
               {loading ? (
                 <tr>
-                  <td colSpan={8} className="px-5 py-12 text-center text-gray-500">
+                  <td
+                    colSpan={8}
+                    className="px-5 py-12 text-center text-gray-500"
+                  >
                     Loading registrations...
                   </td>
                 </tr>
               ) : registrations.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-5 py-12 text-center text-gray-500">
+                  <td
+                    colSpan={8}
+                    className="px-5 py-12 text-center text-gray-500"
+                  >
                     No registrations found.
                   </td>
                 </tr>
@@ -604,13 +698,17 @@ export default function AdminRegistrationsPage() {
                     </td>
 
                     <td className="px-5 py-4">
-                      <span className={`rounded-full px-3 py-1 text-xs font-medium ${statusStyle(registration.registrationStatus)}`}>
+                      <span
+                        className={`rounded-full px-3 py-1 text-xs font-medium ${statusStyle(registration.registrationStatus)}`}
+                      >
                         {formatLabel(registration.registrationStatus)}
                       </span>
                     </td>
 
                     <td className="px-5 py-4">
-                      <span className={`rounded-full px-3 py-1 text-xs font-medium ${statusStyle(registration.paymentStatus)}`}>
+                      <span
+                        className={`rounded-full px-3 py-1 text-xs font-medium ${statusStyle(registration.paymentStatus)}`}
+                      >
                         {formatLabel(registration.paymentStatus)}
                       </span>
                     </td>

@@ -1,3 +1,5 @@
+
+import { connection } from "next/server";
 import connectDB from "@/lib/mongodb";
 import Event from "@/models/Event";
 import RegistrationForm from "./registration-form";
@@ -5,11 +7,12 @@ import RegistrationForm from "./registration-form";
 export const instant = false;
 
 export default async function RegisterPage() {
+  await connection();
   await connectDB();
 
   const event = await Event.findOne({
     eventName: "Alumni Homecoming 2027",
-  });
+  }).lean();
 
   if (!event) {
     return (

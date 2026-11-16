@@ -5,7 +5,7 @@ export interface IAttendance {
   registrationId: Types.ObjectId;
   attendeeId: Types.ObjectId;
   attendeeName: string;
-  attendeeType: "alumni" | "former_teacher" | "former_staff" | "companion";
+  attendeeType: "alumni" | "former_teacher" | "former_staff" | "companion" | "former_principal";
   checkInMethod: "qr_code" | "manual";
   checkedInBy?: string;
   checkedInAt: Date;
@@ -32,7 +32,7 @@ const AttendanceSchema = new Schema<IAttendance>(
     },
     attendeeType: {
       type: String,
-      enum: ["alumni", "former_teacher", "former_staff", "companion"],
+      enum: ["alumni", "former_teacher", "former_staff", "companion", "former_principal"],
       required: true,
     },
     checkInMethod: {

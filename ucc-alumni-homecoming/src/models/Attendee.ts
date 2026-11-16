@@ -5,7 +5,7 @@ export interface IAttendee {
   registrationId: Types.ObjectId;
   fullName: string;
   email?: string;
-  attendeeType: "alumni" | "former_teacher" | "former_staff" | "companion";
+  attendeeType: "alumni" | "former_teacher" | "former_staff" | "former_principal" | "companion";
   isPrimaryRegistrant: boolean;
   attendanceStatus: "not_checked_in" | "checked_in";
 }
@@ -29,7 +29,7 @@ const AttendeeSchema = new Schema<IAttendee>(
     },
     attendeeType: {
       type: String,
-      enum: ["alumni", "former_teacher", "former_staff", "companion"],
+      enum: ["alumni", "former_teacher", "former_staff","former_principal", "companion"],
       required: true,
     },
     isPrimaryRegistrant: {
