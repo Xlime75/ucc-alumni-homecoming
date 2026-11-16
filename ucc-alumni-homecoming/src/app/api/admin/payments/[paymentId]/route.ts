@@ -26,7 +26,7 @@ export async function PATCH(
 
   try {
     // Verify administrator access.
-    const admin = await requireAdmin();
+    const admin = await requireAdmin(request);
 
     if (!admin.authorized) {
       return admin.response;

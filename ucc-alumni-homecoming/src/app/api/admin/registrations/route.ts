@@ -8,7 +8,7 @@ import { requireAdmin } from "@/lib/admin-auth";
 
 export async function GET(request: NextRequest) {
   try {
-    const admin = await requireAdmin();
+    const admin = await requireAdmin(request);
 
     if (!admin.authorized) {
       return admin.response;

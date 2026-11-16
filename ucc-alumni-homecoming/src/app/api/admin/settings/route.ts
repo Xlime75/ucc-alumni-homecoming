@@ -16,9 +16,9 @@ const settingsSchema = z
     message: "At least one setting must be provided.",
   });
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const admin = await requireAdmin();
+    const admin = await requireAdmin(request);
 
     if (!admin.authorized) {
       return admin.response;
@@ -58,7 +58,7 @@ export async function GET() {
 
 export async function PATCH(request: NextRequest) {
   try {
-    const admin = await requireAdmin();
+    const admin = await requireAdmin(request);
 
     if (!admin.authorized) {
       return admin.response;

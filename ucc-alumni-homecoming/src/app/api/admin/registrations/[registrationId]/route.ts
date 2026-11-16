@@ -19,7 +19,7 @@ export async function GET(
   context: RouteContext
 ) {
   try {
-    const admin = await requireAdmin();
+    const admin = await requireAdmin(request);
 
     if (!admin.authorized) {
       return admin.response;

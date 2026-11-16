@@ -1,13 +1,22 @@
 
-import { getServerSession } from "next-auth";
-import { NextResponse } from "next/server";
+import { getToken } from "next-auth/jwt";
+import { NextRequest, NextResponse } from "next/server";
 
-import { authOptions, isAdminEmail } from "@/lib/auth";
+const adminEmails = (process.env.ADMIN_EMAILS ?? "")
+  .split(",")
+  .map((email) => email.trim().toLowerCase())
+  .filter(Boolean);
 
-export async function requireAdmin() {
-  const session = await getServerSession(authOptions);
+export async function requireAdmin(request: NextRequest) {
+  const token = await getToken({
+    req: request,
+    secret: process.env.NEXTAUTH_SECRET,
+  });
 
-  if (!session?.user?.email) {
+  const email =
+    typeof token?.email === "string" ? token.email : null;
+
+  if (!email) {
     return {
       authorized: false as const,
       response: NextResponse.json(
@@ -20,7 +29,7 @@ export async function requireAdmin() {
     };
   }
 
-  if (!isAdminEmail(session.user.email)) {
+  if (!adminEmails.includes(email.trim().toLowerCase())) {
     return {
       authorized: false as const,
       response: NextResponse.json(
@@ -35,6 +44,6 @@ export async function requireAdmin() {
 
   return {
     authorized: true as const,
-    email: session.user.email,
+    email,
   };
 }

@@ -1,15 +1,15 @@
 
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 import connectDB from "@/lib/mongodb";
 import Payment from "@/models/Payment";
 import "@/models/Registration";
 import { requireAdmin } from "@/lib/admin-auth";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     // Verify administrator access.
-    const admin = await requireAdmin();
+    const admin = await requireAdmin(request);
 
     if (!admin.authorized) {
       return admin.response;
