@@ -9,8 +9,20 @@ import { requireAdmin } from "@/lib/admin-auth";
 const settingsSchema = z
   .object({
     feePerPerson: z.number().positive().max(100000).optional(),
+
     registrationOpen: z.boolean().optional(),
+
     checkInEnabled: z.boolean().optional(),
+
+    gcashAccountName: z.string().trim().max(100).optional(),
+
+    gcashAccountNumber: z.string().trim().max(30).optional(),
+
+    bankName: z.string().trim().max(100).optional(),
+
+    bankAccountName: z.string().trim().max(100).optional(),
+
+    bankAccountNumber: z.string().trim().max(50).optional(),
   })
   .refine((data) => Object.keys(data).length > 0, {
     message: "At least one setting must be provided.",
@@ -41,9 +53,17 @@ export async function GET(request: NextRequest) {
         eventName: event.eventName,
         date: event.date,
         venue: event.venue,
+
         feePerPerson: event.feePerPerson,
         registrationOpen: event.registrationOpen,
         checkInEnabled: event.checkInEnabled,
+
+        gcashAccountName: event.gcashAccountName ?? "",
+        gcashAccountNumber: event.gcashAccountNumber ?? "",
+
+        bankName: event.bankName ?? "",
+        bankAccountName: event.bankAccountName ?? "",
+        bankAccountNumber: event.bankAccountNumber ?? "",
       },
     });
   } catch (error) {
@@ -103,6 +123,13 @@ export async function PATCH(request: NextRequest) {
         feePerPerson: event.feePerPerson,
         registrationOpen: event.registrationOpen,
         checkInEnabled: event.checkInEnabled,
+
+        gcashAccountName: event.gcashAccountName ?? "",
+        gcashAccountNumber: event.gcashAccountNumber ?? "",
+
+        bankName: event.bankName ?? "",
+        bankAccountName: event.bankAccountName ?? "",
+        bankAccountNumber: event.bankAccountNumber ?? "",
       },
     });
   } catch (error) {

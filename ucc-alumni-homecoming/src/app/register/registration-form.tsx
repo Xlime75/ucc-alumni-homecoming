@@ -1,7 +1,8 @@
 
 "use client";
-  
+
 import { useState } from "react";
+import Link from "next/link";
 
 type AttendeeType =
   | "alumni"
@@ -234,9 +235,24 @@ export default function RegistrationForm({
           </div>
         </div>
 
-        <p className="mt-5 text-center text-sm text-gray-500">
-          Please save your registration number for future reference.
-        </p>
+        <div className="mt-6 space-y-4 text-center">
+          <p className="text-sm text-gray-500">
+            Please save your registration number for future reference.
+          </p>
+
+          <p className="text-sm text-gray-600">
+            You can now proceed to payment. Sign in using the same Google
+            account associated with the email address you provided during
+            registration.
+          </p>
+
+          <Link
+            href="/payment"
+            className="block w-full rounded-lg bg-[#064B36] px-6 py-4 font-semibold text-white transition hover:bg-[#043b2b]"
+          >
+            Proceed to Payment
+          </Link>
+        </div>
       </div>
     );
   }

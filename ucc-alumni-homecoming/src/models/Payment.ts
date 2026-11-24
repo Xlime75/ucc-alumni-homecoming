@@ -6,7 +6,13 @@ export interface IPayment {
   amount: number;
   paymentMethod: "gcash" | "bank_transfer" | "cash_onsite";
   referenceNumber?: string;
+
+  // Legacy field for previously stored public proof URLs.
   proofOfPaymentUrl?: string;
+
+  // Private Vercel Blob storage pathname.
+  proofOfPaymentPath?: string;
+
   paymentStatus:
     | "pending"
     | "pending_verification"
@@ -14,6 +20,7 @@ export interface IPayment {
     | "rejected"
     | "paid_onsite"
     | "refunded";
+
   verifiedBy?: string;
   verifiedAt?: Date;
   createdAt: Date;
@@ -27,24 +34,34 @@ const PaymentSchema = new Schema<IPayment>(
       required: true,
       index: true,
     },
+
     amount: {
       type: Number,
       required: true,
       min: 0,
     },
+
     paymentMethod: {
       type: String,
       enum: ["gcash", "bank_transfer", "cash_onsite"],
       required: true,
     },
+
     referenceNumber: {
       type: String,
       trim: true,
     },
+
     proofOfPaymentUrl: {
       type: String,
       trim: true,
     },
+
+    proofOfPaymentPath: {
+      type: String,
+      trim: true,
+    },
+
     paymentStatus: {
       type: String,
       enum: [
@@ -57,10 +74,12 @@ const PaymentSchema = new Schema<IPayment>(
       ],
       default: "pending",
     },
+
     verifiedBy: {
       type: String,
       trim: true,
     },
+
     verifiedAt: {
       type: Date,
     },

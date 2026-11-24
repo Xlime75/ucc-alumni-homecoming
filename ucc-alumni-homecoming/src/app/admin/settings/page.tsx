@@ -12,6 +12,8 @@ import {
   CheckCircle,
   AlertCircle,
   Loader2,
+  Smartphone,
+  Landmark,
 } from "lucide-react";
 
 type EventSettings = {
@@ -21,37 +23,62 @@ type EventSettings = {
   feePerPerson: number;
   registrationOpen: boolean;
   checkInEnabled: boolean;
+  gcashAccountName: string;
+  gcashAccountNumber: string;
+  bankName: string;
+  bankAccountName: string;
+  bankAccountNumber: string;
 };
 
 export default function AdminSettingsPage() {
   const [settings, setSettings] = useState<EventSettings | null>(null);
+
   const [feePerPerson, setFeePerPerson] = useState("200");
   const [registrationOpen, setRegistrationOpen] = useState(false);
   const [checkInEnabled, setCheckInEnabled] = useState(false);
+
+  const [gcashAccountName, setGcashAccountName] = useState("");
+  const [gcashAccountNumber, setGcashAccountNumber] = useState("");
+
+  const [bankName, setBankName] = useState("");
+  const [bankAccountName, setBankAccountName] = useState("");
+  const [bankAccountNumber, setBankAccountNumber] = useState("");
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
+  const applySettings = useCallback((currentSettings: EventSettings) => {
+    setSettings(currentSettings);
+    setFeePerPerson(String(currentSettings.feePerPerson));
+    setRegistrationOpen(currentSettings.registrationOpen);
+    setCheckInEnabled(currentSettings.checkInEnabled);
+
+    setGcashAccountName(currentSettings.gcashAccountName ?? "");
+    setGcashAccountNumber(currentSettings.gcashAccountNumber ?? "");
+
+    setBankName(currentSettings.bankName ?? "");
+    setBankAccountName(currentSettings.bankAccountName ?? "");
+    setBankAccountNumber(currentSettings.bankAccountNumber ?? "");
+  }, []);
+
   const loadSettings = useCallback(async () => {
     setLoading(true);
     setError("");
 
     try {
-      const response = await fetch("/api/admin/settings");
+      const response = await fetch("/api/admin/settings", {
+        cache: "no-store",
+      });
+
       const data = await response.json();
 
       if (!response.ok || !data.success) {
         throw new Error(data.message || "Unable to load event settings.");
       }
 
-      const currentSettings = data.settings as EventSettings;
-
-      setSettings(currentSettings);
-      setFeePerPerson(String(currentSettings.feePerPerson));
-      setRegistrationOpen(currentSettings.registrationOpen);
-      setCheckInEnabled(currentSettings.checkInEnabled);
+      applySettings(data.settings as EventSettings);
     } catch (err) {
       setError(
         err instanceof Error
@@ -61,49 +88,59 @@ export default function AdminSettingsPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [applySettings]);
 
-useEffect(() => {
-  let isActive = true;
+  useEffect(() => {
+    let isActive = true;
 
-  async function fetchInitialSettings() {
-    try {
-      const response = await fetch("/api/admin/settings");
-      const data = await response.json();
+    async function fetchInitialSettings() {
+      try {
+        const response = await fetch("/api/admin/settings", {
+          cache: "no-store",
+        });
 
-      if (!response.ok || !data.success) {
-        throw new Error(data.message || "Unable to load event settings.");
-      }
+        const data = await response.json();
 
-      if (!isActive) return;
+        if (!response.ok || !data.success) {
+          throw new Error(data.message || "Unable to load event settings.");
+        }
 
-      const currentSettings = data.settings as EventSettings;
+        if (!isActive) return;
 
-      setSettings(currentSettings);
-      setFeePerPerson(String(currentSettings.feePerPerson));
-      setRegistrationOpen(currentSettings.registrationOpen);
-      setCheckInEnabled(currentSettings.checkInEnabled);
-    } catch (err) {
-      if (!isActive) return;
+        const currentSettings = data.settings as EventSettings;
 
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Something went wrong while loading settings."
-      );
-    } finally {
-      if (isActive) {
-        setLoading(false);
+        setSettings(currentSettings);
+        setFeePerPerson(String(currentSettings.feePerPerson));
+        setRegistrationOpen(currentSettings.registrationOpen);
+        setCheckInEnabled(currentSettings.checkInEnabled);
+
+        setGcashAccountName(currentSettings.gcashAccountName ?? "");
+        setGcashAccountNumber(currentSettings.gcashAccountNumber ?? "");
+
+        setBankName(currentSettings.bankName ?? "");
+        setBankAccountName(currentSettings.bankAccountName ?? "");
+        setBankAccountNumber(currentSettings.bankAccountNumber ?? "");
+      } catch (err) {
+        if (!isActive) return;
+
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Something went wrong while loading settings."
+        );
+      } finally {
+        if (isActive) {
+          setLoading(false);
+        }
       }
     }
-  }
 
-  void fetchInitialSettings();
+    void fetchInitialSettings();
 
-  return () => {
-    isActive = false;
-  };
-}, []);
+    return () => {
+      isActive = false;
+    };
+  }, []);
 
   async function handleSave() {
     setMessage("");
@@ -128,6 +165,13 @@ useEffect(() => {
           feePerPerson: fee,
           registrationOpen,
           checkInEnabled,
+
+          gcashAccountName: gcashAccountName.trim(),
+          gcashAccountNumber: gcashAccountNumber.trim(),
+
+          bankName: bankName.trim(),
+          bankAccountName: bankAccountName.trim(),
+          bankAccountNumber: bankAccountNumber.trim(),
         }),
       });
 
@@ -190,7 +234,7 @@ useEffect(() => {
           </div>
 
           <p className="mt-1 text-sm text-gray-500">
-            Manage registration and attendance settings.
+            Manage registration, attendance, and payment settings.
           </p>
         </div>
 
@@ -203,6 +247,7 @@ useEffect(() => {
         </button>
       </div>
 
+      {/* Event Information */}
       <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
         <h2 className="text-lg font-bold text-[#10264C]">
           Event Information
@@ -211,7 +256,6 @@ useEffect(() => {
         <div className="mt-5 space-y-4">
           <div className="flex items-center gap-3">
             <CalendarDays className="text-[#064B36]" size={20} />
-
             <div>
               <p className="text-xs text-gray-500">Event Name</p>
               <p className="font-semibold text-gray-800">
@@ -222,7 +266,6 @@ useEffect(() => {
 
           <div className="flex items-center gap-3">
             <CalendarDays className="text-[#064B36]" size={20} />
-
             <div>
               <p className="text-xs text-gray-500">Event Date</p>
               <p className="font-semibold text-gray-800">
@@ -238,7 +281,6 @@ useEffect(() => {
 
           <div className="flex items-center gap-3">
             <MapPin className="text-[#064B36]" size={20} />
-
             <div>
               <p className="text-xs text-gray-500">Venue</p>
               <p className="font-semibold text-gray-800">
@@ -249,6 +291,7 @@ useEffect(() => {
         </div>
       </div>
 
+      {/* Registration Settings */}
       <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
         <h2 className="text-lg font-bold text-[#10264C]">
           Registration Settings
@@ -281,8 +324,8 @@ useEffect(() => {
           </div>
 
           <p className="mt-2 text-xs text-gray-500">
-            Current fee: ₱{settings.feePerPerson.toLocaleString("en-PH")} per person.
-            New registrations will use the updated fee.
+            Current fee: ₱{settings.feePerPerson.toLocaleString("en-PH")} per
+            person. New registrations will use the updated fee.
           </p>
         </div>
 
@@ -291,7 +334,6 @@ useEffect(() => {
             <p className="font-semibold text-gray-800">
               Registration Status
             </p>
-
             <p className="mt-1 text-sm text-gray-500">
               Allow attendees to submit registrations.
             </p>
@@ -325,6 +367,131 @@ useEffect(() => {
         </p>
       </div>
 
+      {/* GCash Settings */}
+      <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+        <div className="flex items-center gap-3">
+          <Smartphone className="text-[#064B36]" size={22} />
+          <div>
+            <h2 className="text-lg font-bold text-[#10264C]">
+              GCash Payment Details
+            </h2>
+            <p className="text-sm text-gray-500">
+              Configure the GCash account displayed to attendees.
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-5 space-y-4">
+          <div>
+            <label
+              htmlFor="gcashAccountName"
+              className="mb-2 block text-sm font-semibold text-gray-700"
+            >
+              GCash Account Name
+            </label>
+            <input
+              id="gcashAccountName"
+              type="text"
+              maxLength={100}
+              value={gcashAccountName}
+              onChange={(event) => setGcashAccountName(event.target.value)}
+              placeholder="Enter GCash account name"
+              className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-[#064B36] focus:ring-2 focus:ring-[#064B36]/10"
+            />
+          </div>
+
+          <div>
+            <label
+              htmlFor="gcashAccountNumber"
+              className="mb-2 block text-sm font-semibold text-gray-700"
+            >
+              GCash Mobile Number
+            </label>
+            <input
+              id="gcashAccountNumber"
+              type="text"
+              maxLength={30}
+              value={gcashAccountNumber}
+              onChange={(event) => setGcashAccountNumber(event.target.value)}
+              placeholder="Enter GCash mobile number"
+              className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-[#064B36] focus:ring-2 focus:ring-[#064B36]/10"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Bank Transfer Settings */}
+      <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+        <div className="flex items-center gap-3">
+          <Landmark className="text-[#064B36]" size={22} />
+          <div>
+            <h2 className="text-lg font-bold text-[#10264C]">
+              Bank Transfer Details
+            </h2>
+            <p className="text-sm text-gray-500">
+              Configure the bank account displayed to attendees.
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-5 space-y-4">
+          <div>
+            <label
+              htmlFor="bankName"
+              className="mb-2 block text-sm font-semibold text-gray-700"
+            >
+              Bank Name
+            </label>
+            <input
+              id="bankName"
+              type="text"
+              maxLength={100}
+              value={bankName}
+              onChange={(event) => setBankName(event.target.value)}
+              placeholder="Enter bank name"
+              className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-[#064B36] focus:ring-2 focus:ring-[#064B36]/10"
+            />
+          </div>
+
+          <div>
+            <label
+              htmlFor="bankAccountName"
+              className="mb-2 block text-sm font-semibold text-gray-700"
+            >
+              Bank Account Name
+            </label>
+            <input
+              id="bankAccountName"
+              type="text"
+              maxLength={100}
+              value={bankAccountName}
+              onChange={(event) => setBankAccountName(event.target.value)}
+              placeholder="Enter bank account name"
+              className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-[#064B36] focus:ring-2 focus:ring-[#064B36]/10"
+            />
+          </div>
+
+          <div>
+            <label
+              htmlFor="bankAccountNumber"
+              className="mb-2 block text-sm font-semibold text-gray-700"
+            >
+              Bank Account Number
+            </label>
+            <input
+              id="bankAccountNumber"
+              type="text"
+              maxLength={50}
+              value={bankAccountNumber}
+              onChange={(event) => setBankAccountNumber(event.target.value)}
+              placeholder="Enter bank account number"
+              className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-[#064B36] focus:ring-2 focus:ring-[#064B36]/10"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Attendance Settings */}
       <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
         <h2 className="text-lg font-bold text-[#10264C]">
           Attendance Settings
@@ -332,10 +499,7 @@ useEffect(() => {
 
         <div className="mt-5 flex items-center justify-between gap-4">
           <div>
-            <p className="font-semibold text-gray-800">
-              QR Check-in
-            </p>
-
+            <p className="font-semibold text-gray-800">QR Check-in</p>
             <p className="mt-1 text-sm text-gray-500">
               Allow attendees to use the QR attendance system.
             </p>
@@ -369,6 +533,7 @@ useEffect(() => {
         </p>
       </div>
 
+      {/* Feedback */}
       {message && (
         <div className="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 p-4 text-sm text-green-800">
           <CheckCircle size={18} />
@@ -383,6 +548,7 @@ useEffect(() => {
         </div>
       )}
 
+      {/* Save */}
       <div className="flex justify-end">
         <button
           onClick={handleSave}

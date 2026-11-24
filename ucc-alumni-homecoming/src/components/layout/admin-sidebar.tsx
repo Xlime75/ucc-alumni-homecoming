@@ -9,6 +9,7 @@ import {
   LayoutDashboard,
   Users,
   CreditCard,
+  ClipboardCheck,
   Settings,
   LogOut,
 } from "lucide-react";
@@ -29,7 +30,12 @@ const navigation = [
     href: "/admin/payments",
     icon: CreditCard,
   },
-    {
+  {
+    name: "Attendance",
+    href: "/admin/attendance",
+    icon: ClipboardCheck,
+  },
+  {
     name: "Settings",
     href: "/admin/settings",
     icon: Settings,
@@ -52,6 +58,7 @@ export default function AdminSidebar() {
               className="object-cover object-top"
             />
           </div>
+
           <div>
             <h2 className="font-bold">UCC Alumni Homecoming</h2>
             <p className="text-xs text-white/60">
@@ -93,9 +100,7 @@ export default function AdminSidebar() {
 
       <div className="border-t border-white/10 p-4">
         <button
-          onClick={() =>
-            signOut({ callbackUrl: "/admin/login" })
-          }
+          onClick={() => signOut({ callbackUrl: "/admin/login" })}
           className="flex w-full items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium text-white/80 transition hover:bg-red-500/20 hover:text-white"
         >
           <LogOut size={19} />

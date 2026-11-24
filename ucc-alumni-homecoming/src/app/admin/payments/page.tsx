@@ -9,7 +9,7 @@ type Payment = {
   amount: number;
   paymentMethod: string;
   referenceNumber?: string;
-  proofOfPaymentUrl?: string;
+  hasProof: boolean;
   paymentStatus: string;
   createdAt: string;
   registrationId: {
@@ -229,9 +229,7 @@ export default function AdminPaymentsPage() {
 
                   <div className="mt-5 grid gap-3 sm:grid-cols-2">
                     <div>
-                      <p className="text-xs text-gray-500">
-                        Amount
-                      </p>
+                      <p className="text-xs text-gray-500">Amount</p>
                       <p className="font-semibold">
                         ₱{payment.amount.toLocaleString("en-PH")}
                       </p>
@@ -265,15 +263,21 @@ export default function AdminPaymentsPage() {
                     </div>
                   </div>
 
-                  {payment.proofOfPaymentUrl && (
+                  {payment.hasProof && (
                     <a
-                      href={payment.proofOfPaymentUrl}
+                      href={`/api/admin/payments/${payment._id}/proof`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="mt-5 inline-block text-sm font-semibold text-[#064B36] underline"
                     >
                       View payment proof
                     </a>
+                  )}
+
+                  {!payment.hasProof && (
+                    <p className="mt-5 text-sm text-red-600">
+                      No payment proof available.
+                    </p>
                   )}
 
                   <div className="mt-6 flex flex-wrap gap-3">

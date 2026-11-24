@@ -17,7 +17,6 @@ export async function GET(request: NextRequest) {
 
     await connectDB();
 
-    // Retrieve payments awaiting verification.
     const payments = await Payment.find({
       paymentStatus: "pending_verification",
     })
@@ -28,10 +27,23 @@ export async function GET(request: NextRequest) {
       .sort({ createdAt: -1 })
       .lean();
 
+    const safePayments = payments.map((payment) => ({
+      _id: payment._id,
+      amount: payment.amount,
+      paymentMethod: payment.paymentMethod,
+      referenceNumber: payment.referenceNumber,
+      paymentStatus: payment.paymentStatus,
+      createdAt: payment.createdAt,
+      hasProof: Boolean(
+        payment.proofOfPaymentPath || payment.proofOfPaymentUrl
+      ),
+      registrationId: payment.registrationId,
+    }));
+
     return NextResponse.json({
       success: true,
-      total: payments.length,
-      payments,
+      total: safePayments.length,
+      payments: safePayments,
     });
   } catch (error) {
     console.error("Admin payment retrieval error:", error);

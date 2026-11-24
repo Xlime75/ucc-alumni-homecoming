@@ -12,6 +12,13 @@ export interface IEvent {
   registrationOpen: boolean;
   checkInEnabled: boolean;
   registrationFormUrl?: string;
+
+  // Payment account details
+  gcashAccountName?: string;
+  gcashAccountNumber?: string;
+  bankName?: string;
+  bankAccountName?: string;
+  bankAccountNumber?: string;
 }
 
 const EventSchema = new Schema<IEvent>(
@@ -61,6 +68,35 @@ const EventSchema = new Schema<IEvent>(
     registrationFormUrl: {
       type: String,
       trim: true,
+    },
+
+    // GCash details
+    gcashAccountName: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    gcashAccountNumber: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
+    // Bank transfer details
+    bankName: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    bankAccountName: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    bankAccountNumber: {
+      type: String,
+      trim: true,
+      default: "",
     },
   },
   {

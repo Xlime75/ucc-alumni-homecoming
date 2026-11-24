@@ -10,6 +10,8 @@ import {
   Eye,
   X,
   ArrowLeft,
+  CheckCircle,
+  UserCheck,
 } from "lucide-react";
 
 type AttendeeType =
@@ -82,6 +84,12 @@ export default function AdminRegistrationsPage() {
   const [detailsLoading, setDetailsLoading] = useState(false);
   const [detailsError, setDetailsError] = useState("");
 
+  const [checkingInAttendee, setCheckingInAttendee] = useState<string | null>(
+    null
+  );
+  const [checkInMessage, setCheckInMessage] = useState("");
+  const [checkInError, setCheckInError] = useState("");
+
   const loadRegistrations = useCallback(async () => {
     try {
       setLoading(true);
@@ -100,9 +108,7 @@ export default function AdminRegistrationsPage() {
       const data = await response.json();
 
       if (!response.ok || !data.success) {
-        throw new Error(
-          data.message || "Unable to load registrations."
-        );
+        throw new Error(data.message || "Unable to load registrations.");
       }
 
       setRegistrations(data.registrations);
@@ -136,9 +142,7 @@ export default function AdminRegistrationsPage() {
         const data = await response.json();
 
         if (!response.ok || !data.success) {
-          throw new Error(
-            data.message || "Unable to load registrations."
-          );
+          throw new Error(data.message || "Unable to load registrations.");
         }
 
         if (isActive) {
@@ -147,9 +151,7 @@ export default function AdminRegistrationsPage() {
       } catch (err) {
         if (isActive) {
           setError(
-            err instanceof Error
-              ? err.message
-              : "Something went wrong."
+            err instanceof Error ? err.message : "Something went wrong."
           );
         }
       } finally {
@@ -170,6 +172,8 @@ export default function AdminRegistrationsPage() {
     try {
       setDetailsLoading(true);
       setDetailsError("");
+      setCheckInMessage("");
+      setCheckInError("");
       setSelectedRegistration(null);
 
       const response = await fetch(
@@ -197,6 +201,75 @@ export default function AdminRegistrationsPage() {
       );
     } finally {
       setDetailsLoading(false);
+    }
+  };
+
+  const handleManualCheckIn = async (attendee: Attendee) => {
+    if (!selectedRegistration) return;
+
+    const { registration } = selectedRegistration;
+
+    if (
+      registration.registrationStatus !== "confirmed" ||
+      registration.paymentStatus !== "paid"
+    ) {
+      setCheckInError(
+        "Only attendees from fully paid and confirmed registrations can be checked in."
+      );
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Are you sure you want to manually check in ${attendee.fullName}?`
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setCheckingInAttendee(attendee._id);
+      setCheckInError("");
+      setCheckInMessage("");
+
+      const response = await fetch(
+        `/api/admin/attendees/${attendee._id}/check-in`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || "Unable to check in attendee.");
+      }
+
+      setSelectedRegistration((current) => {
+        if (!current) return current;
+
+        return {
+          ...current,
+          attendees: current.attendees.map((item) =>
+            item._id === attendee._id
+              ? { ...item, attendanceStatus: "checked_in" }
+              : item
+          ),
+        };
+      });
+
+      setCheckInMessage(
+        `${attendee.fullName} was successfully checked in.`
+      );
+    } catch (err) {
+      setCheckInError(
+        err instanceof Error
+          ? err.message
+          : "Something went wrong during check-in."
+      );
+    } finally {
+      setCheckingInAttendee(null);
     }
   };
 
@@ -241,14 +314,18 @@ export default function AdminRegistrationsPage() {
       case "confirmed":
       case "verified":
       case "paid_onsite":
+      case "checked_in":
         return "bg-green-100 text-green-800";
+
       case "pending":
       case "pending_verification":
         return "bg-yellow-100 text-yellow-800";
+
       case "cancelled":
       case "refunded":
       case "rejected":
         return "bg-red-100 text-red-800";
+
       default:
         return "bg-gray-100 text-gray-700";
     }
@@ -258,10 +335,18 @@ export default function AdminRegistrationsPage() {
     const { registration, attendees, payments } = selectedRegistration;
     const primary = registration.primaryRegistrant;
 
+    const canCheckIn =
+      registration.registrationStatus === "confirmed" &&
+      registration.paymentStatus === "paid";
+
     return (
       <div className="space-y-6">
         <button
-          onClick={() => setSelectedRegistration(null)}
+          onClick={() => {
+            setSelectedRegistration(null);
+            setCheckInMessage("");
+            setCheckInError("");
+          }}
           className="inline-flex items-center gap-2 text-sm font-medium text-emerald-800 hover:text-emerald-950"
         >
           <ArrowLeft size={17} />
@@ -428,13 +513,48 @@ export default function AdminRegistrationsPage() {
 
         <section className="overflow-hidden rounded-xl border bg-white shadow-sm">
           <div className="border-b p-5">
-            <h2 className="text-lg font-bold text-gray-900">
-              Attendees ({attendees.length})
-            </h2>
-            <p className="mt-1 text-sm text-gray-500">
-              Primary registrant and companions included in this registration.
-            </p>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h2 className="text-lg font-bold text-gray-900">
+                  Attendees ({attendees.length})
+                </h2>
+                <p className="mt-1 text-sm text-gray-500">
+                  Primary registrant and companions included in this
+                  registration.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <UserCheck size={17} className="text-emerald-700" />
+                {attendees.filter(
+                  (attendee) => attendee.attendanceStatus === "checked_in"
+                ).length}{" "}
+                of {attendees.length} checked in
+              </div>
+            </div>
           </div>
+
+          {checkInMessage && (
+            <div className="mx-5 mt-5 rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-800">
+              <div className="flex items-center gap-2">
+                <CheckCircle size={17} />
+                {checkInMessage}
+              </div>
+            </div>
+          )}
+
+          {checkInError && (
+            <div className="mx-5 mt-5 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+              {checkInError}
+            </div>
+          )}
+
+          {!canCheckIn && (
+            <div className="mx-5 mt-5 rounded-lg border border-yellow-200 bg-yellow-50 p-3 text-sm text-yellow-800">
+              Manual check-in is available only when the registration is
+              confirmed and fully paid.
+            </div>
+          )}
 
           {attendees.length === 0 ? (
             <p className="p-5 text-sm text-gray-500">
@@ -442,33 +562,78 @@ export default function AdminRegistrationsPage() {
             </p>
           ) : (
             <div className="divide-y">
-              {attendees.map((attendee, index) => (
-                <div
-                  key={attendee._id}
-                  className="flex flex-col gap-2 p-5 sm:flex-row sm:items-center sm:justify-between"
-                >
-                  <div>
-                    <p className="font-semibold text-gray-900">
-                      {index + 1}. {attendee.fullName}
-                    </p>
-                    <p className="mt-1 text-xs text-gray-500">
-                      {formatLabel(attendee.attendeeType)}
-                      {attendee.isPrimaryRegistrant
-                        ? " • Primary Registrant"
-                        : " • Companion"}
-                    </p>
-                    {attendee.email && (
-                      <p className="mt-1 text-xs text-gray-500">
-                        {attendee.email}
-                      </p>
-                    )}
-                  </div>
+              {attendees.map((attendee, index) => {
+                const isCheckedIn =
+                  attendee.attendanceStatus === "checked_in";
 
-                  <span className="w-fit rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700">
-                    {formatLabel(attendee.attendanceStatus)}
-                  </span>
-                </div>
-              ))}
+                const isProcessing =
+                  checkingInAttendee === attendee._id;
+
+                return (
+                  <div
+                    key={attendee._id}
+                    className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between"
+                  >
+                    <div>
+                      <p className="font-semibold text-gray-900">
+                        {index + 1}. {attendee.fullName}
+                      </p>
+
+                      <p className="mt-1 text-xs text-gray-500">
+                        {formatLabel(attendee.attendeeType)}
+                        {attendee.isPrimaryRegistrant
+                          ? " • Primary Registrant"
+                          : " • Companion"}
+                      </p>
+
+                      {attendee.email && (
+                        <p className="mt-1 text-xs text-gray-500">
+                          {attendee.email}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span
+                        className={`w-fit rounded-full px-3 py-1 text-xs font-medium ${statusStyle(attendee.attendanceStatus)}`}
+                      >
+                        {formatLabel(attendee.attendanceStatus)}
+                      </span>
+
+                      {isCheckedIn ? (
+                        <span className="inline-flex items-center gap-1 text-xs font-medium text-green-700">
+                          <CheckCircle size={15} />
+                          Completed
+                        </span>
+                      ) : (
+                        <button
+                          onClick={() => handleManualCheckIn(attendee)}
+                          disabled={
+                            !canCheckIn ||
+                            checkingInAttendee !== null
+                          }
+                          className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-700 px-3 py-2 text-xs font-medium text-white hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          {isProcessing ? (
+                            <>
+                              <RefreshCw
+                                size={14}
+                                className="animate-spin"
+                              />
+                              Checking In...
+                            </>
+                          ) : (
+                            <>
+                              <UserCheck size={14} />
+                              Check In
+                            </>
+                          )}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           )}
         </section>
@@ -496,18 +661,22 @@ export default function AdminRegistrationsPage() {
                     <th className="px-5 py-3">Date</th>
                   </tr>
                 </thead>
+
                 <tbody className="divide-y">
                   {payments.map((payment) => (
                     <tr key={payment._id}>
                       <td className="px-5 py-4">
                         {formatLabel(payment.paymentMethod)}
                       </td>
+
                       <td className="px-5 py-4">
                         {payment.referenceNumber || "—"}
                       </td>
+
                       <td className="px-5 py-4 font-medium">
                         {formatCurrency(payment.amount)}
                       </td>
+
                       <td className="px-5 py-4">
                         <span
                           className={`rounded-full px-3 py-1 text-xs font-medium ${statusStyle(payment.paymentStatus)}`}
@@ -515,6 +684,7 @@ export default function AdminRegistrationsPage() {
                           {formatLabel(payment.paymentStatus)}
                         </span>
                       </td>
+
                       <td className="whitespace-nowrap px-5 py-4 text-gray-500">
                         {formatDate(payment.createdAt)}
                       </td>
@@ -675,7 +845,10 @@ export default function AdminRegistrationsPage() {
                 </tr>
               ) : (
                 registrations.map((registration) => (
-                  <tr key={registration._id} className="hover:bg-gray-50">
+                  <tr
+                    key={registration._id}
+                    className="hover:bg-gray-50"
+                  >
                     <td className="px-5 py-4">
                       <p className="font-semibold text-gray-900">
                         {registration.primaryRegistrant.fullName}
