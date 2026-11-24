@@ -10,6 +10,7 @@ import {
   Users,
   CreditCard,
   ClipboardCheck,
+  BarChart3,
   Settings,
   LogOut,
 } from "lucide-react";
@@ -34,6 +35,11 @@ const navigation = [
     name: "Attendance",
     href: "/admin/attendance",
     icon: ClipboardCheck,
+  },
+  {
+    name: "Reports",
+    href: "/admin/reports",
+    icon: BarChart3,
   },
   {
     name: "Settings",
